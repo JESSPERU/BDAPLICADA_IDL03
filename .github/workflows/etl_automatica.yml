@@ -2,19 +2,21 @@ name: Ejecucion ETL Medallion Medianoche
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Se ejecuta a la medianoche UTC
-  workflow_dispatch: # Botón para ejecutarlo manualmente
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   update-silver-layer:
     runs-on: ubuntu-latest
     steps:
-      - name: Instalar cliente PostgreSQL
-        run: sudo apt-get install -y postgresql-client
+      - name: Instalar cliente PostgreSQL 16
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
 
       - name: Ejecutar SP de Estudiantes y Matriculas
         env:
-          DB_URL: ${{ secrets.DB_URL }}
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          psql "$DB_URL" -c "SELECT silver.sp_load_estudiantes();"
-          psql "$DB_URL" -c "SELECT silver.sp_load_matriculas();"
+          psql "host=aws-1-us-east-2.pooler.supabase.com port=5432 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=require connect_timeout=30" -c "SELECT silver.sp_load_estudiantes();"
+          psql "host=aws-1-us-east-2.pooler.supabase.com port=5432 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=require connect_timeout=30" -c "SELECT silver.sp_load_matriculas();"
