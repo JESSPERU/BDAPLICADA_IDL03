@@ -15,6 +15,7 @@ jobs:
       - name: Ejecutar SP de Estudiantes y Matriculas
         env:
           DB_URL: ${{ secrets.DB_URL }}
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }} # GitHub usará esto automáticamente
         run: |
           psql "$DB_URL" -c "SELECT silver.sp_load_estudiantes();"
           psql "$DB_URL" -c "SELECT silver.sp_load_matriculas();"
