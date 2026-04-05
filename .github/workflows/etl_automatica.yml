@@ -17,5 +17,5 @@ jobs:
           DB_URL: ${{ secrets.DB_URL }}
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          psql "$DB_URL?connect_timeout=10" -c "SELECT silver.sp_load_estudiantes();"
-          psql "$DB_URL?connect_timeout=10" -c "SELECT silver.sp_load_matriculas();"
+          psql "$DB_URL" -c "SELECT silver.sp_load_estudiantes();"
+          psql "$DB_URL" -c "SELECT silver.sp_load_matriculas();"
