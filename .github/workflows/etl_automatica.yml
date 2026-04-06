@@ -14,26 +14,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-16
 
-      - name: Test conexion
+      - name: Esperar que el pooler se estabilice
+        run: sleep 60
+
+      - name: Ejecutar SP de Estudiantes
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          echo "=== Test ping al host ==="
-          nc -zv aws-1-us-east-2.pooler.supabase.com 5432 || echo "Puerto 5432 BLOQUEADO"
-          nc -zv aws-1-us-east-2.pooler.supabase.com 6543 || echo "Puerto 6543 BLOQUEADO"
+          for i in 1 2 3 4 5; do
+            echo "Intento $i de sp_load_estudiantes..."
+            psql "host=aws-1-us-east-2.pooler.supabase.com port=6543 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=require connect_timeout=30" \
+              -c "SELECT silver.sp_load_estudiantes();" && echo "OK" && break
+            echo "Fallo, esperando 30s..."
+            sleep 30
+          done
 
-          echo "=== Test sslmode=disable ==="
-          psql "host=aws-1-us-east-2.pooler.supabase.com port=5432 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=disable connect_timeout=30" -c "SELECT 1;" || echo "FALLO sin SSL"
-
-          echo "=== Test puerto 6543 con SSL ==="
-          psql "host=aws-1-us-east-2.pooler.supabase.com port=6543 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=require connect_timeout=30" -c "SELECT 1;" || echo "FALLO puerto 6543"
-
-          echo "=== Test sslmode=prefer ==="
-          psql "host=aws-1-us-east-2.pooler.supabase.com port=5432 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=prefer connect_timeout=30" -c "SELECT 1;" || echo "FALLO sslmode=prefer"
-
-      - name: Ejecutar SP si conexion OK
+      - name: Ejecutar SP de Matriculas
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          psql "host=aws-1-us-east-2.pooler.supabase.com port=6543 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=require connect_timeout=30" -c "SELECT silver.sp_load_estudiantes();"
-          psql "host=aws-1-us-east-2.pooler.supabase.com port=6543 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=require connect_timeout=30" -c "SELECT silver.sp_load_matriculas();"
+          for i in 1 2 3 4 5; do
+            echo "Intento $i de sp_load_matriculas..."
+            psql "host=aws-1-us-east-2.pooler.supabase.com port=6543 dbname=postgres user=postgres.xjzcfiusbhrvcbfpqqbz sslmode=require connect_timeout=30" \
+              -c "SELECT silver.sp_load_matriculas();" && echo "OK" && break
+            echo "Fallo, esperando 30s..."
+            sleep 30
+          done
